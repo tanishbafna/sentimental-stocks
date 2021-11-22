@@ -5,13 +5,29 @@ from tqdm import tqdm
 
 #----------------------
 
-stocks = ['TSLA']
+stocks = {
+    'TSLA':['Tesla'],
+    'HD':['Home Depot'],
+    'BABA': ['Alibaba Group'],
+    'NVDA': ['NVIDIA Corporation'],
+    'JNJ': ['Johnson & Johnson'],
+    'NKE': ['Nike'],
+    'TWTR': ['Twitter Inc.'],
+    'AAPL': ['Apple'],
+    'AMZN': ['Amazon'],
+    'XOM': ['Exxon Mobil'],
+    'JPM': ['JP Morgan Chase'],
+    'AMC': ['AMC Entertainment'],
+    'PLUG': ['Plug Power'],
+    'PG': ['Procter & Gamble'],
+    'PFE': ['Pfizer']
+}
 
 #----------------------
 
-n = 1000
-sdate_str = '2020-01-01'
-edate_str = '2020-01-31'
+n = 1
+sdate_str = '2021-01-01'
+edate_str = '2021-01-02'
 min_likes = 10
 min_replies = 1
 min_retweets = 1
@@ -27,7 +43,7 @@ tweets_arr = []
 
 #----------------------
 
-for stock in stocks:
+for stock in stocks.keys():
 
     q_ticker = f'${stock}'
 
@@ -35,19 +51,12 @@ for stock in stocks:
 
         query = f'{q_ticker} since:{date_range[d]} until:{date_range[d+1]} min_faves:{min_likes} min_replies:{min_replies} min_retweets:{min_retweets}'
         for i, tweet in tqdm(enumerate(sntwitter.TwitterSearchScraper(query).get_items())):
-            if i>n:
+            if i>=n:
                 break
-            tweets_arr.append([tweet.id, tweet.date, tweet.user.username, tweet.likeCount, tweet.retweetCount, tweet.replyCount, tweet.url, tweet.content])
-        
-        # q_hashtag = stock
-        # query = f'{q_ticker} since:{date_range[d]} until:{date_range[d+1]} min_faves:{min_likes} min_replies:{min_replies} min_retweets:{min_retweets}'
-        # for i, tweet in tqdm(enumerate(sntwitter.TwitterHashtagScraper(query).get_items())):
-        #     if i>n:
-        #         break
-        #     tweets_arr.append([tweet.id, tweet.date, tweet.user.username, tweet.likeCount, tweet.retweetCount, tweet.replyCount, tweet.url, tweet.content])
+            tweets_arr.append([tweet.id, stock, tweet.date, tweet.user.displayname, tweet.user.id, tweet.likeCount, tweet.retweetCount, tweet.replyCount, tweet.url, tweet.content])
 
-tweets_df = pd.DataFrame(tweets_arr, columns=['ID', 'Date', 'Username', 'Likes', 'Retweets', 'Replies', 'URL', 'Text'])
+tweets_df = pd.DataFrame(tweets_arr, columns=['ID', 'Stock', 'Date', 'User_Name', 'User_ID', 'Likes', 'Retweets', 'Replies', 'URL', 'Text'])
 tweets_df.drop_duplicates(subset=['ID'], ignore_index=True, inplace=True)
 tweets_df.set_index('ID', inplace=True)
-tweets_df.to_csv('tweets.csv')
+tweets_df.to_csv('tweets_scraped.csv')
 print(f'Scraped {len(tweets_df.index)} Tweets')
