@@ -1,3 +1,4 @@
+import json
 import datetime
 import pandas as pd
 from tqdm import tqdm
@@ -6,25 +7,7 @@ import snscrape.modules.twitter as sntwitter
 
 #----------------------
 
-stocks = {
-    'TSLA':['Tesla'],
-    'HD':['Home Depot'],
-    'BABA': ['Alibaba Group'],
-    'NVDA': ['NVIDIA Corporation'],
-    'JNJ': ['Johnson & Johnson'],
-    'NKE': ['Nike'],
-    'TWTR': ['Twitter Inc.'],
-    'AAPL': ['Apple'],
-    'AMZN': ['Amazon'],
-    'XOM': ['Exxon Mobil'],
-    'JPM': ['JP Morgan Chase'],
-    'AMC': ['AMC Entertainment'],
-    'PLUG': ['Plug Power'],
-    'PG': ['Procter & Gamble'],
-    'PFE': ['Pfizer']
-}
-
-#----------------------
+stocks = json.load(open('stocks.json'))
 
 n = 50
 sdate_str = '2021-01-01'

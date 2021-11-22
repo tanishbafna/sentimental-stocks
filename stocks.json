@@ -1,0 +1,17 @@
+{
+    "TSLA":["Tesla"],
+    "HD":["Home Depot"],
+    "BABA": ["Alibaba Group"],
+    "NVDA": ["NVIDIA Corporation"],
+    "JNJ": ["Johnson & Johnson"],
+    "NKE": ["Nike"],
+    "TWTR": ["Twitter Inc."],
+    "AAPL": ["Apple"],
+    "AMZN": ["Amazon"],
+    "XOM": ["Exxon Mobil"],
+    "JPM": ["JP Morgan Chase"],
+    "AMC": ["AMC Entertainment"],
+    "PLUG": ["Plug Power"],
+    "PG": ["Procter & Gamble"],
+    "PFE": ["Pfizer"]
+}
