@@ -23,7 +23,7 @@ session.params['limit'] = 10
 #----------------------
 
 sdate_str = '2021-01-01'
-edate_str = '2021-01-16'
+edate_str = '2021-01-30'
 
 sdate_dt = datetime.datetime.strptime(sdate_str, '%Y-%m-%d')
 edate_dt = datetime.datetime.strptime(edate_str, '%Y-%m-%d')
@@ -40,12 +40,19 @@ for stock in tqdm(stocks.keys()):
 
     for d in tqdm(range(len(date_range) - 1)):
 
-        resp = session.get(endpoint, params={'ticker':stock, 'published_utc.gte':date_range[d], 'published_utc.lt':date_range[d+1]})
-        if resp.status_code == 200 and len(resp.json()['results']) > 0:
-            news_articles[stock][date_range[d][:9]] = [[r['id'], r['publisher']['name'], r['article_url'], r['title'], r['author'], r['published_utc'], r['description']] for r in resp.json()['results']]
-        elif resp.status_code == 429:
-            time.sleep(60)
+        done = False
 
+        while not done:
+            resp = session.get(endpoint, params={'ticker':stock, 'published_utc.gte':date_range[d], 'published_utc.lt':date_range[d+1]})
+            if resp.status_code == 200:
+                done = True
+                if len(resp.json()['results']) > 0:
+                    news_articles[stock][date_range[d][:9]] = [[r['id'], r['publisher']['name'], r['article_url'], r['title'], r['author'], r['published_utc'], r['description']] for r in resp.json()['results']]
+            elif resp.status_code == 429:
+                time.sleep(60)
+            else:
+                print(f'{resp.status_code}: {stock} [{date_range[d]}]')
+    
 #----------------------
 
 with open('tweets_news.json', 'w') as f:
