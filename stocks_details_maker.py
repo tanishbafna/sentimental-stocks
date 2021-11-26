@@ -1,12 +1,13 @@
 import os
-from time import sleep
-from tqdm import tqdm
+import time
 import requests
 import json
 import csv
+import datetime as dt
+import pandas as pd
+from tqdm import tqdm
 from polygon import RESTClient
-from dotenv import load_dotenv
-load_dotenv()
+from dotenv import load_dotenv; load_dotenv()
 
 stocks_list = [
     {
@@ -86,6 +87,11 @@ stocks_list = [
     }
 ]
 
+
+def epoch_to_frmtdate(epoch_no):
+        formatted_date = dt.datetime.utcfromtimestamp(epoch_no).strftime("%Y/%m/%d %H:%M")
+        return formatted_date
+
 def return_beta(ticker, interval="1d", observations=100):
     base_url = "https://api.newtonanalytics.com/stock-beta/"
     params = {
@@ -103,9 +109,43 @@ def return_beta(ticker, interval="1d", observations=100):
     if response['status'] == "200":
         return round(float(response['data']), 2)
 
-# Constructing connection with YahooFinance API for fundamentals
-def return_fundamentals(ticker, **kwargs):
-    return None
+# Connection with Yahoo Finance API for prices
+def return_historical_prices(ticker, range="1y", region="US", interval="1d"):
+    base_url = f"https://yfapi.net/v8/finance/chart/{ticker}"
+    headers = {"accept": "application/json", "X-API-KEY": os.getenv('YAHOO_FINANCE_KEY')}
+    params = {
+        "range": range, 
+        "region": region,
+        "interval": interval,
+        "lang": "en"
+    }
+    try:
+        resp = json.loads(requests.get(base_url, params=params, headers=headers).text)
+        print("Res received")
+    except: 
+        print("Error retrieving info from YF API")
+        quit
+    resp_results = resp['chart']['result'][0]
+    # Timestamp management
+    timestamps = resp_results['timestamp']
+    final_timestamps = list()
+    for time in timestamps:
+        final_timestamps.append(epoch_to_frmtdate(time))
+    # Stock quote management
+    quotes = resp_results['indicators']['quote'][0]
+    data = {
+        "date": pd.to_datetime(final_timestamps, format="%Y/%m/%d %H:%M"),
+        "ticker": ticker,
+        "volume": quotes['volume'],
+        "open": quotes['open'],
+        "close": quotes['close'],
+        "high": quotes['high'],
+        "low": quotes['low']
+    }
+    # Stock Dataframe
+    stock_df = pd.DataFrame(data)
+    stock_df.to_csv("Test1")
+    return stock_df
 
 def main():
     PolygonKey = os.getenv('POLYGON_KEY')
@@ -122,7 +162,7 @@ def main():
                 stock_obj['sector'] = None
                 stock_obj['beta'] = None
                 stock_obj['ceo'] = None
-                final_list.append(stock_obj)
+                output.append(stock_obj)
                 continue
             stock_obj = [company for company in stocks_list if company['ticker'] == ticker][0]
             stock_obj['name'] = stock_info.name
@@ -132,13 +172,14 @@ def main():
             stock_obj['ceo'] = stock_info.ceo
 
             output.append(stock_obj)
-            sleep(11)
+            time.sleep(11)
         return output
 
 if __name__ == '__main__':
-    final_list = main()
-    with open('stock_details', 'w') as f:
-            writer = csv.writer(f)
-            writer.writerow(["ticker", "name", "industry", "sector", "beta", "ceo"])
-            for item in final_list:
-                writer.writerow([item["ticker"], item["name"], item["industry"], item["sector"], item["beta"], item["ceo"]])
+    return_historical_prices("AAPL")
+    # final_list = main()
+    # with open('stock_details', 'w') as f:
+    #         writer = csv.writer(f)
+    #         writer.writerow(["ticker", "name", "industry", "sector", "beta", "ceo"])
+    #         for item in final_list:
+    #             writer.writerow([item["ticker"], item["name"], item["industry"], item["sector"], item["beta"], item["ceo"]])
