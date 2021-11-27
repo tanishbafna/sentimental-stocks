@@ -1,5 +1,6 @@
 import os
 import time
+from pandas.core.indexes.base import Index
 import requests
 import json
 import csv
@@ -7,7 +8,7 @@ import datetime as dt
 import pandas as pd
 from tqdm import tqdm
 from polygon import RESTClient
-from dotenv import load_dotenv; load_dotenv()
+from dotenv import load_dotenv, main; load_dotenv()
 
 stocks_list = [
     {
@@ -89,7 +90,7 @@ stocks_list = [
 
 
 def epoch_to_frmtdate(epoch_no):
-        formatted_date = dt.datetime.utcfromtimestamp(epoch_no).strftime("%Y/%m/%d %H:%M")
+        formatted_date = dt.datetime.utcfromtimestamp(epoch_no).strftime("%Y/%m/%d")
         return formatted_date
 
 def return_beta(ticker, interval="1d", observations=100):
@@ -121,10 +122,10 @@ def return_historical_prices(ticker, range="1y", region="US", interval="1d"):
     }
     try:
         resp = json.loads(requests.get(base_url, params=params, headers=headers).text)
-        print("Res received")
     except: 
         print("Error retrieving info from YF API")
         quit
+    print(resp.items())
     resp_results = resp['chart']['result'][0]
     # Timestamp management
     timestamps = resp_results['timestamp']
@@ -134,7 +135,7 @@ def return_historical_prices(ticker, range="1y", region="US", interval="1d"):
     # Stock quote management
     quotes = resp_results['indicators']['quote'][0]
     data = {
-        "date": pd.to_datetime(final_timestamps, format="%Y/%m/%d %H:%M"),
+        "date": pd.to_datetime(final_timestamps, format="%Y/%m/%d"),
         "ticker": ticker,
         "volume": quotes['volume'],
         "open": quotes['open'],
@@ -144,14 +145,13 @@ def return_historical_prices(ticker, range="1y", region="US", interval="1d"):
     }
     # Stock Dataframe
     stock_df = pd.DataFrame(data)
-    stock_df.to_csv("Test1")
     return stock_df
 
-def main():
+def polygon_summarize():
     PolygonKey = os.getenv('POLYGON_KEY')
     output = list()
     with RESTClient(PolygonKey) as client:
-        for company in tqdm(stocks_list):
+        for company in tqdm(stocks_list[:2]):
             ticker = company['ticker']
             beta = return_beta(ticker, interval="1d", observations=365)
             try:
@@ -173,11 +173,17 @@ def main():
 
             output.append(stock_obj)
             time.sleep(11)
-        return output
+        print(output)
 
 if __name__ == '__main__':
-    return_historical_prices("AAPL")
-    # final_list = main()
+
+
+    main_df = pd.DataFrame()
+    for stock in tqdm(stocks_list):
+        prices_df = return_historical_prices(stock['ticker'], range="2y")
+        main_df = main_df.append(prices_df) 
+    
+    main_df.to_csv("FTest")
     # with open('stock_details', 'w') as f:
     #         writer = csv.writer(f)
     #         writer.writerow(["ticker", "name", "industry", "sector", "beta", "ceo"])
