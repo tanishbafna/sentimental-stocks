@@ -88,7 +88,6 @@ stocks_list = [
     }
 ]
 
-
 def epoch_to_frmtdate(epoch_no):
         formatted_date = dt.datetime.utcfromtimestamp(epoch_no).strftime("%Y/%m/%d")
         return formatted_date
@@ -110,7 +109,7 @@ def return_beta(ticker, interval="1d", observations=100):
     if response['status'] == "200":
         return round(float(response['data']), 2)
 
-# Connection with Yahoo Finance API for prices
+# Connection with Yahoo Finance API for historical prices
 def return_historical_prices(ticker, range="1y", region="US", interval="1d"):
     base_url = f"https://yfapi.net/v8/finance/chart/{ticker}"
     headers = {"accept": "application/json", "X-API-KEY": os.getenv('YAHOO_FINANCE_KEY')}
@@ -147,43 +146,32 @@ def return_historical_prices(ticker, range="1y", region="US", interval="1d"):
     stock_df = pd.DataFrame(data)
     return stock_df
 
-def polygon_summarize():
+def polygon_summarize(ticker):
     PolygonKey = os.getenv('POLYGON_KEY')
-    output = list()
     with RESTClient(PolygonKey) as client:
-        for company in tqdm(stocks_list[:2]):
-            ticker = company['ticker']
-            beta = return_beta(ticker, interval="1d", observations=365)
-            try:
-                stock_info = client.reference_ticker_details(ticker)
-            except:
-                stock_obj = [company for company in stocks_list if company['ticker'] == ticker][0]
-                stock_obj['name'] = None
-                stock_obj['sector'] = None
-                stock_obj['beta'] = None
-                stock_obj['ceo'] = None
-                output.append(stock_obj)
-                continue
-            stock_obj = [company for company in stocks_list if company['ticker'] == ticker][0]
-            stock_obj['name'] = stock_info.name
-            stock_obj['industry'] = stock_info.industry
-            stock_obj['sector'] = stock_info.sector
-            stock_obj['beta'] = beta
-            stock_obj['ceo'] = stock_info.ceo
-
-            output.append(stock_obj)
-            time.sleep(11)
-        print(output)
+        beta = return_beta(ticker, interval="1d", observations=365)
+        try:
+            stock_info = client.reference_ticker_details(ticker)
+        except:
+            return None
+        data = {
+            'ticker': ticker,
+            'name': stock_info.name,
+            'industry': stock_info.industry,
+            'sector': stock_info.sector,
+            'beta_1y': beta,
+            'ceo': stock_info.ceo
+        }
+    return pd.DataFrame(data)
 
 if __name__ == '__main__':
-
-
-    main_df = pd.DataFrame()
+    prices_df = pd.DataFrame()
     for stock in tqdm(stocks_list):
         prices_df = return_historical_prices(stock['ticker'], range="2y")
         main_df = main_df.append(prices_df) 
     
-    main_df.to_csv("FTest")
+    prices_df.to_csv("FTest")
+
     # with open('stock_details', 'w') as f:
     #         writer = csv.writer(f)
     #         writer.writerow(["ticker", "name", "industry", "sector", "beta", "ceo"])
