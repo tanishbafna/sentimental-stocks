@@ -55,5 +55,5 @@ for stock in tqdm(stocks.keys()):
     
 #----------------------
 
-with open('tweets_news.json', 'w') as f:
+with open('data/tweets_news.json', 'w') as f:
     json.dump(news_articles, f, indent=2)

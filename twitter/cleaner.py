@@ -5,7 +5,7 @@ from nltk.tokenize import TweetTokenizer, PunktSentenceTokenizer
 
 tweetTok = TweetTokenizer()
 sentenceTok = PunktSentenceTokenizer()
-tweets_df = pd.read_csv('tweets_raw.csv')
+tweets_df = pd.read_csv('data/tweets_raw.csv')
 
 #----------------------
 
@@ -29,4 +29,4 @@ def cleanPipeline(s):
 #----------------------
 
 tweets_df.Text = tweets_df.Text.apply(cleanPipeline)
-tweets_df.to_csv('tweets_cleaned.csv', index=False)
+tweets_df.to_csv('data/tweets_cleaned.csv', index=False)
