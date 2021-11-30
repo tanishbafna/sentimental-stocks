@@ -11,9 +11,9 @@ import snscrape.modules.twitter as sntwitter
 os.mkdir('data/progress')
 stocks = json.load(open('stocks.json'))
 
-n = 5
+n = 500
 sdate_str = '2020-01-01'
-edate_str = '2020-01-15'
+edate_str = '2021-12-01'
 min_likes = 30
 min_replies = 1
 min_retweets = 10
