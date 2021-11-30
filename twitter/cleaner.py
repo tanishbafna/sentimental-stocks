@@ -1,4 +1,5 @@
 import re
+import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup
 from nltk.tokenize import TweetTokenizer, PunktSentenceTokenizer
@@ -18,7 +19,7 @@ def cleanPipeline(s):
     except:
         pass
 
-    s = re.sub(r'[^a-zA-Z0-9.,$]', ' ', s)
+    # s = re.sub(r'[^a-zA-Z0-9.,$]', ' ', s)
     
     sentences = [sentence.strip('.') for sentence in sentenceTok.tokenize(s)]
     s = ' '.join(sentences).strip()
@@ -28,5 +29,6 @@ def cleanPipeline(s):
 
 #----------------------
 
-tweets_df.Text = tweets_df.Text.apply(cleanPipeline)
+tweets_df['Cleaned'] = np.NaN
+tweets_df.Cleaned = tweets_df.Text.apply(cleanPipeline)
 tweets_df.to_csv('data/tweets_cleaned.csv', index=False)
