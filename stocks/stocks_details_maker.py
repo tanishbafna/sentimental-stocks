@@ -1,95 +1,19 @@
 import os
 import time
-from pandas.core.indexes.base import Index
-import requests
 import json
 import csv
 import datetime as dt
 import pandas as pd
+
+from pandas.core.indexes.base import Index
+import requests
 from tqdm import tqdm
+
 from polygon import RESTClient
-from dotenv import load_dotenv, main; load_dotenv()
+from dotenv import load_dotenv; load_dotenv()
 
-stocks_list = [
-    {
-        "industry": "Automobile",
-        "ticker": "TSLA",
-        "beta": 1.85
-    },
-    {
-        "industry": None,
-        "ticker": "HD",
-        "beta": None
-    },
-    {
-        "industry": None,
-        "ticker": "BABA",
-        "beta": 0.62
-    },
-    {
-        "industry": None,
-        "ticker": "NVDA",
-        "beta": 1.72
-    },
-    {
-        "industry": None,
-        "ticker": "JNJ",
-        "beta": 0.46
-    },
-    {
-        "industry": None,
-        "ticker": "NKE",
-        "beta": 0.97
-    },
-    {
-        "industry": None,
-        "ticker": "TWTR",
-        "beta": 1.47
-    },
-    {
-        "industry": None,
-        "ticker": "AAPL",
-        "beta": None
-    },
-    {
-        "industry": None,
-        "ticker": "AMZN",
-        "beta": None
-    },
-    {
-        "industry": None,
-        "ticker": "XOM",
-        "beta": None
-    },
-    {
-        "industry": None,
-        "ticker": "JPM",
-        "beta": None
-    },
-    {
-        "industry": None,
-        "ticker": "AMC",
-        "beta": None
-    },
-    {
-        "industry": None,
-        "ticker": "PLUG",
-        "beta": None
-    },
-    {
-        "industry": None,
-        "ticker": "PG",
-        "beta": None
-    },
-    {
-        "industry": None,
-        "ticker": "PFE",
-        "beta": None
-    }
-]
-
-def epoch_to_frmtdate(epoch_no):
-        formatted_date = dt.datetime.utcfromtimestamp(epoch_no).strftime("%Y/%m/%d")
+def epoch_to_frmtdate(epoch_no, format):
+        formatted_date = dt.datetime.utcfromtimestamp(epoch_no).strftime(format)
         return formatted_date
 
 def return_beta(ticker, interval="1d", observations=100):
@@ -122,19 +46,24 @@ def return_historical_prices(ticker, range="1y", region="US", interval="1d"):
     try:
         resp = json.loads(requests.get(base_url, params=params, headers=headers).text)
     except: 
-        print("Error retrieving info from YF API")
+        print(f"Error retrieving info from YF API for ticker: {ticker}")
         quit
-    print(resp.items())
+    
+    if resp['message'] == 'Limit Exceeded':
+        print("You have exceeded your Yahoo Finance API limit")
+        return None
+    
     resp_results = resp['chart']['result'][0]
     # Timestamp management
+    format = "%Y/%m/%d" 
     timestamps = resp_results['timestamp']
     final_timestamps = list()
     for time in timestamps:
-        final_timestamps.append(epoch_to_frmtdate(time))
+        final_timestamps.append(epoch_to_frmtdate(time, format=format))
     # Stock quote management
     quotes = resp_results['indicators']['quote'][0]
     data = {
-        "date": pd.to_datetime(final_timestamps, format="%Y/%m/%d"),
+        "date": pd.to_datetime(final_timestamps, format=format),
         "ticker": ticker,
         "volume": quotes['volume'],
         "open": quotes['open'],
@@ -165,12 +94,17 @@ def polygon_summarize(ticker):
     return pd.DataFrame(data)
 
 if __name__ == '__main__':
-    prices_df = pd.DataFrame()
+    cwd = os.getcwd()
+    with open('./stocks.json', 'r') as f: 
+        stocks_file = json.load(f)
+        stocks_list = [ticker[0] for ticker in stocks_file.items()]
+
+    main_df = pd.DataFrame()
     for stock in tqdm(stocks_list):
-        prices_df = return_historical_prices(stock['ticker'], range="2y")
+        prices_df = return_historical_prices(stock, range="1y")
         main_df = main_df.append(prices_df) 
     
-    prices_df.to_csv("FTest")
+    prices_df.to_csv(os.path.join("stocks", "stock_prices"))
 
     # with open('stock_details', 'w') as f:
     #         writer = csv.writer(f)
