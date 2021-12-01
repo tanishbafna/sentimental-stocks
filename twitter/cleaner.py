@@ -11,7 +11,13 @@ tweets_df = pd.read_csv('data/tweets_raw.csv')
 #----------------------
 
 def cleanPipeline(s):
-    s = BeautifulSoup(s, 'lxml').get_text()
+    
+    try:
+        s = BeautifulSoup(s, 'lxml').get_text()
+    except:
+        print(s)
+        pass
+
     s = re.sub(r'@[A-Za-z0-9]+|https?://[A-Za-z0-9./]+|\$[A-Za-z]+', '', s)
 
     try:
