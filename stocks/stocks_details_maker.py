@@ -49,10 +49,6 @@ def return_historical_prices(ticker, range="1y", region="US", interval="1d"):
         print(f"Error retrieving info from YF API for ticker: {ticker}")
         quit
     
-    if resp['message'] == 'Limit Exceeded':
-        print("You have exceeded your Yahoo Finance API limit")
-        return None
-    
     resp_results = resp['chart']['result'][0]
     # Timestamp management
     format = "%Y/%m/%d" 
@@ -101,10 +97,10 @@ if __name__ == '__main__':
 
     main_df = pd.DataFrame()
     for stock in tqdm(stocks_list):
-        prices_df = return_historical_prices(stock, range="1y")
+        prices_df = return_historical_prices(stock, range="5y")
         main_df = main_df.append(prices_df) 
     
-    prices_df.to_csv(os.path.join("stocks", "stock_prices"))
+    main_df.to_csv(os.path.join("stocks", "stock_prices"))
 
     # with open('stock_details', 'w') as f:
     #         writer = csv.writer(f)
