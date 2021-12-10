@@ -1,66 +1,43 @@
-import os
-import tqdm
+import datetime
 import pandas as pd
-from numpy import np
-from datetime import datetime
+import numpy as np
+from tqdm import tqdm
 
 #----------------------
 
-def tweetData():
+tweets = pd.read_csv('data/sentiment/tweets_sentiment.csv', converters={'Date':lambda x: x[:10]})
+news = pd.read_csv('data/sentiment/tweets_sentiment.csv')
+prices = pd.read_csv('data/quantitative/stock_prices.csv')
 
-    path = '/Users/tanishbafna/Downloads/data'
-    folders = [i for i in os.listdir(path) if not i.startswith('.')]
+df = pd.read_csv('data/quantitative/stock_prices.csv')
+df['tweets_SentMean'] = 0.0
+df['tweets_WeightedSentMean'] = 0.0
+df['news_SentMean'] = 0.0
 
-    arr = []
+#----------------------
 
-    for folder in folders:
-        files = [i for i in os.listdir(f'{path}/{folder}/progress') if i.endswith('.csv')]
-        for file in tqdm.tqdm(files):
-            df = pd.read_csv(f'{path}/{folder}/progress/{file}', converters={'ID':int, 'User_ID':int, 'User_Followers':int, 'User_Verified':int, 'User_Lists':int, 'Likes':int, 'Retweets':int, 'Replies':int})
-            df.drop(columns=['Unnamed: 0'], inplace=True)
-            arr.append(df)
+for idx, row in tqdm(prices.iterrows(), total=len(prices.index)):
 
-    tweets_df = pd.concat(arr, ignore_index=True)
-    tweets_df.drop_duplicates(subset=['ID', 'Stock'], ignore_index=True, inplace=True)
-    tweets_df.to_csv('data/tweets_raw.csv', index=False)
+    stock = row['Stock']
+    date = row['Date']
 
-    print(f'Scraped {len(tweets_df.index)} Tweets')
+    tweets_select = tweets.loc[(tweets.Stock == stock) & (tweets.Date == date)]
+    news_select = news.loc[(news.Stock == stock) & (news.Date == date)]
+    
+    if len(tweets_select.index) > 0:
+        tweets_select = tweets_select[['sentiment','weighted_sentiment']]
+        sentiment_mean = tweets_select['sentiment'].mean()
+        weighted_sentiment_mean = tweets_select['weighted_sentiment'].mean()
 
-    for stock in tweets_df['Stock'].unique():
-        print(f"{stock}: {len(tweets_df[tweets_df['Stock']==stock])}")
+        df.at[idx, 'tweets_SentMean'] = sentiment_mean
+        df.at[idx, 'tweets_WeightedSentMean'] = weighted_sentiment_mean
 
-def newsData():
+    if len(news_select.index) > 0:
+        sentiment_mean = news_select['sentiment'].mean()
 
-    df_company = pd.read_csv('data/temp/company_news.csv')
-    df_financial = pd.read_csv('data/temp/financial_news.csv')
+        df.at[idx, 'news_SentMean'] = sentiment_mean
 
-    rename_company = {
-        'datetime':'Date',
-        'headline': 'Title',
-        'id': 'ID',
-        'related': 'Stock',
-        'source': 'Publisher',
-        'summary': 'Description',
-        'url': 'URL'
-    }
+#----------------------
 
-    df_company.rename(columns=rename_company, inplace=True)
-    df_company['Author'] = df_company['Publisher']
-    df_company = df_company[['ID','Stock','Date','Publisher','Title','Author','Description','URL']]
-
-    df_company['Date'] = df_company.apply(lambda row: datetime.utcfromtimestamp(row['Date']).strftime('%Y-%m-%d'), axis=1)
-    df_financial['Date'] = df_financial.apply(lambda row: row['Date'][:10], axis=1)    
-
-    final_df = pd.concat([df_company, df_financial], ignore_index=True) 
-    final_df.drop_duplicates(subset=['ID','Stock','Date'], inplace=True)
-    final_df.drop_duplicates(subset=['Stock','Date','URL'], inplace=True)
-
-    final_df['Description'] = final_df.apply(lambda row: row['Title'] if row['Description'] is np.NaN else row['Description'])
-
-    final_df.to_csv('data/news_raw.csv', index=False)
-    print(f'Scraped {len(final_df.index)} Articles')
-
-    for stock in final_df['Stock'].unique():
-        print(f"{stock}: {len(final_df[final_df['Stock']==stock])}")
-
-newsData()
+df.to_csv('data/ml_dataset.csv', index=False)
+print(len(df.index))
