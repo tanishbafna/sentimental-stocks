@@ -10,8 +10,8 @@ pd.options.mode.chained_assignment = None
 
 stocks = json.load(open('stocks.json'))
 
-sdate_str = '2019-01-01'
-edate_str = '2021-12-01'
+sdate_str = '2018-12-01'
+edate_str = '2021-12-10'
 
 sdate_dt = datetime.datetime.strptime(sdate_str, '%Y-%m-%d')
 edate_dt = datetime.datetime.strptime(edate_str, '%Y-%m-%d')
