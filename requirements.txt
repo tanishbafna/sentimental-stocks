@@ -9,3 +9,4 @@ requests==2.26.0
 snscrape @ git+https://github.com/JustAnotherArchivist/snscrape.git@a6b6f3faaa26f541d9469651451340096b5abc92
 tqdm==4.62.3
 urllib3==1.26.7
+yfinance==0.1.67
