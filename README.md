@@ -61,6 +61,14 @@ For running only the ML models (from the `Linear Regression`) section, upload on
     - `merge_news.py` (Merges Company and Financial Data)
 
 - `results/` (Graphs and Tables)
+    - `linearRegression` (Regression Outcomes)
+        - `3` (3-Day Lag Graphs and Tables)
+        - `7` (7-Day Lag Graphs and Tables)
+        - `15` (15-Day Lag Graphs and Tables)
+    - `randomForest` (Random Forest Outcomes)
+        - `3` (3-Day Lag Graphs and Tables)
+        - `7` (7-Day Lag Graphs and Tables)
+        - `15` (15-Day Lag Graphs and Tables)
     
 - `stocks.json` (The 15 stocks we analyze)
 
