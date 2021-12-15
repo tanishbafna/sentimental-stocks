@@ -3,6 +3,7 @@
 We investigate the accuracy of the Linear Regression and Random Forest models using financial fundamentals and qualitative information (public sentiment extracted from Twitter and corporate news) in predicting short-term stock price movements. Our data ranges over nearly 3 years — 2019 to 2021 — for 15 selected stocks of the S\&P500 Index.
 
 [GitHub Repository](https://github.com/tanishbafna/sentimental-stocks)
+<br>
 [Colab Pipeline Notebook](https://colab.research.google.com/drive/1F1YfvriY8AswenmidI5YTrius74dLCnd?usp=sharing)
 
 ------------
